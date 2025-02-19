@@ -1,0 +1,14 @@
+.pe pe1 pe2 pe3 pe4
+.com
+pe1 -> pe2 : 1
+pe2 -> pe3 : 1
+pe3 -> pe4 : 1
+pe4 -> pe1 : 1
+_extmem -> pe1 : 1
+_extmem -> pe2 : 1
+_extmem -> pe3 : 1
+_extmem -> pe4 : 1
+pe1 -> _extmem : 1
+pe2 -> _extmem : 1
+pe3 -> _extmem : 1
+pe4 -> _extmem : 1
