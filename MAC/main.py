@@ -1,9 +1,9 @@
 from pysat.formula import CNF
-from pysat.solvers import Glucose3
-from typing import List, Set, Dict, Tuple
+from pysat.solvers import Cadical103
+from typing import List
 import readCGRA
 import readDFG
-import time  # Add this import
+import time
 var = 0
 all_clauses = []
 
@@ -217,7 +217,7 @@ def solve_mapping(nodes: List, components: List, edges_cgra: List, num_cycles: i
     for clause in all_clauses:
         cnf.append(clause)
     
-    solver = Glucose3()
+    solver = Cadical103()
     solver.append_formula(cnf)
     
     solve_start = time.time()
@@ -255,10 +255,10 @@ def interpret_solution(model: List[int], X: List[List[List[int]]], Y: List[List[
 
 def main():
     # Read CGRA architecture
-    readCGRA.read("MAC/e.txt")
+    readCGRA.read("input/e.txt")
     
     # Read DFG
-    readDFG.read("MAC/f.txt")
+    readDFG.read("input/f.txt")
     
     
     

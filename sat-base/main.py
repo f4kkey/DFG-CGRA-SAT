@@ -1,9 +1,9 @@
 from pysat.formula import CNF
-from pysat.solvers import Glucose3
+from pysat.solvers import Cadical103
 from typing import List, Set, Dict, Tuple
 import readCGRA
 import readDFG
-import time  # Add this import
+import time  
 var = 0
 all_clauses = []
 
@@ -169,14 +169,14 @@ def solve_mapping(nodes: List, components: List, edges_cgra: List, num_cycles: i
     
     # print(len(nodes), len(components), len(edges_cgra), num_cycles, var)
     
-    # add_initial_conditions(X, nodes, components)
-    # add_final_conditions(X, nodes, num_cycles)
-    # add_existence_constraints(X, Y, Z, nodes, components, edges_cgra)
-    # add_communication_constraints(X, Y, nodes, edges_cgra)
+    add_initial_conditions(X, nodes, components)
+    add_final_conditions(X, nodes, num_cycles)
+    add_existence_constraints(X, Y, Z, nodes, components, edges_cgra)
+    add_communication_constraints(X, Y, nodes, edges_cgra)
     add_calculation_constraints(X, Y, Z, nodes, components, edges_cgra)
-    # add_capacity_constraints(X, Y, Z, nodes, components, edges_cgra)
+    add_capacity_constraints(X, Y, Z, nodes, components, edges_cgra)
     
-    print(all_clauses)
+    # print(all_clauses)
     
     setup_time = time.time() - start_time
     print(f"Setup time: {setup_time:.3f} seconds")
@@ -187,7 +187,7 @@ def solve_mapping(nodes: List, components: List, edges_cgra: List, num_cycles: i
     for clause in all_clauses:
         cnf.append(clause)
     
-    solver = Glucose3()
+    solver = Cadical103()
     solver.append_formula(cnf)
     
     solve_start = time.time()
@@ -197,7 +197,7 @@ def solve_mapping(nodes: List, components: List, edges_cgra: List, num_cycles: i
     
     if sat:
         model = solver.get_model()
-        # return interpret_solution(model, X, Y, Z, num_cycles, edges_cgra)
+        return interpret_solution(model, X, Y, Z, num_cycles, edges_cgra)
     return None
 
 def interpret_solution(model: List[int], X: List[List[List[int]]], Y: List[List[List[int]]], 
@@ -226,10 +226,10 @@ def interpret_solution(model: List[int], X: List[List[List[int]]], Y: List[List[
 
 def main():
     # Read CGRA architecture
-    components, edges_cgra = readCGRA.read("sat-base/e.txt")
+    components, edges_cgra = readCGRA.read("input/e.txt")
     
     # Read DFG
-    name2node = readDFG.read("sat-base/f.txt")
+    readDFG.read("input/f.txt")
     
     # Solve mapping problem
     result = solve_mapping(readDFG.node, components, edges_cgra, num_cycles=10)

@@ -61,11 +61,6 @@ def create_node(parts: list, name2oprs: dict, name2node: dict):
     if q:  # Store result for output node
         name2node[parts[0]] = q[0]
 
-def print_input_node(node: Node, indent: int = 0):
-    if node.type == -1:
-        print(" " * indent + datanames[node.id], end="")
-        return   
-
 def print_node_info(name: str, n: Node, name2oprs: dict):
     """Print detailed node information"""
     if n.type >= 0:
@@ -225,13 +220,8 @@ def read(filename="f.txt"):
         return None, None
 
 def main():
-    name2node = read("sat-base/f.txt")
+    name2node = read("input/f.txt")
     if name2node:
-        print("\nNodes (Tree format):")
-        for i in range(ninputs, ndata):
-            print(f"{i} : ", end="")
-            print_input_node(node[i], name2oprs)
-            print()
             
         print("\nNodes (Detailed format):")
         for name, n in name2node.items():

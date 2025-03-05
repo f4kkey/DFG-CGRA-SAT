@@ -16,13 +16,15 @@ class Operator:
         self.num_operands = num_operands
         self.commutative = commutative
         self.associative = associative
+        self.next_operator = []
+        
 
 class Node:
-    def __init__(self, type=-1, id=-1, Operator=None, child=[], operands=[]):
+    def __init__(self, type, id, operator, child, operands):
         self.type = type  # operator type or -1 for input
-        self.id = id      # node id (input id for inputs, node index for operators)
+        self.id = id 
         self.is_output = False
-        self.Operator = Operator
+        self.operator = operator
         self.child = child
         self.operands = operands
          
@@ -30,7 +32,7 @@ def create_input(name: str):
     """Create input node"""
     global ninputs, ndata, nodes, name2node
     datanames.append(name)
-    p = Node(type=-1, id=ninputs)  # Input nodes get sequential input IDs
+    p = Node(type=-1, id=ninputs, operator=None, child=[], operands=[]) 
     ninputs += 1
     ndata += 1
     nodes.append(p)
@@ -41,7 +43,7 @@ def reduce_node(node: Node):
     global ndata
     for child in node.child:
         if child.type == 1:
-            if child.Operator == node.Operator:
+            if child.operator == node.operator:
                 # Extend the operands list with operand's operands
                 node.child.extend(child.child)
                 # Remove the original operand since we've flattened its operands
@@ -78,7 +80,7 @@ def create_node(parts: list, name2oprs: dict):
             
             # Create node with operator and operands
             # ndata += 1
-            new_node = Node(type=1, Operator=operator, child=[a, b])  # Store Node objects
+            new_node = Node(type=1, id=ndata-1, operator=operator, child=[a, b],operands=[]) 
             q.append(new_node)
     
     if q:  # Store result for output node
@@ -115,7 +117,7 @@ def gen_node_operands(node: Node):
             subarray = [base_operands[i] for i in indices]
             if operand2node.get(tuple(subarray)) is None:
                 ndata += 1
-                new_node = Node(type=1, id=ndata-1, Operator=node.Operator, child=subarray)
+                new_node = Node(type=1, id=ndata-1, operator=node.operator, child=subarray, operands=[])
                 nodes.append(new_node)
                 operand2node[tuple(subarray)] = new_node
     ndata += 1
@@ -132,11 +134,6 @@ def gen_node_operands(node: Node):
             #     print(i.id, end=" ")
             # print("subarray")
             current_node = operand2node[tuple(subarray)]
-            # print(current_node.id)
-            # if current_node.id == 21:
-            #     for i in subarray:
-            #         print(i.id, end=" ")
-            #     print("subarray")
             for bitmask in range(1,(1 << len(subarray)) -1):
                 a = []
                 b = []
@@ -162,13 +159,6 @@ def gen_node_operands(node: Node):
                 if(moperand.get(tuple(sorted_operands)) == None):
                     moperand[tuple(sorted_operands)] = 1
                     all_operands.append(sorted_operands.copy())
-                    # if(current_node.id == 78):
-                    #     print_operands(current_node)
-            
-                # if(current_node.id == 79):
-                #     for i in sorted_operands:
-                #         print(i.id, end=" ")
-                #     print("sorted_operands")
                     
                 #     print(bitmask,current_node.id,"id")
                 #     for i in subarray:
@@ -181,8 +171,6 @@ def gen_node_operands(node: Node):
                 #         print(i.id, end=" ")
                 #     print("b")
             current_node.operands = all_operands.copy()
-                # print(current_node.id)
-                # print(nodea.id, nodeb.id)
 
 
 
@@ -190,22 +178,22 @@ def mac():
     global nodes, name2node, operand2node, ndata
     for node in nodes:
         if node.type == 1:
-            add_operands = []
+            # print(node.id, node.operator.symbol)
+            add = []
             for operand in node.operands:
                 for member in operand:
                     if member.type == -1:
-                        continue
-                    all_inputs = True
-                    for child in member.child:
-                        if child.type != -1:  
-                            all_inputs = False
-                            break
-                    if all_inputs:
-                        tmp = operand.copy()
-                        tmp.remove(member)
-                        tmp.extend(member.child)
-                        add_operands.append(tmp)     
-            node.operands.extend(add_operands)
+                        continue   
+                    if member.operator in node.operator.next_operator:
+                        # print(node.id, node.operator.symbol, member.id, member.operator.symbol)
+                        for member_operand in member.operands:
+                            if len(member_operand) > 2: 
+                                continue
+                            tmp = operand.copy()
+                            tmp.remove(member)
+                            tmp.extend(member_operand)
+                            add.append(tmp.copy())
+            node.operands.extend(add)
 
 def print_operands(node: Node):
     # for i in node.child:
@@ -213,7 +201,7 @@ def print_operands(node: Node):
     # print()
     for i in node.operands:
         for j in i:
-            print(j.id, end=" ")
+            print('\t',j.id, end=" ")
         print()
 
 def print_tree(node: Node, height: int):
@@ -224,7 +212,7 @@ def print_tree(node: Node, height: int):
     if node.type == -1:  # Input node
         print(f" {datanames[node.id]}")
     else:  # Operator node
-        print(f" {node.Operator.symbol}")
+        print(f" {node.operator.symbol}")
         for child in node.child:
             print_tree(child, height + 1)
 
@@ -356,6 +344,30 @@ def read(filename="f.txt"):
                     
                     i += 1
                 continue
+            
+            elif parts[0] == '.m':
+                i += 1
+                while i < len(lines):
+                    line = lines[i].strip()
+                    if not line or line.startswith('.'):
+                        break
+                    parts = line.split()
+                    st = []
+                    for j in range(len(parts)-1, -1, -1):
+                        if(name2oprs.get(parts[j]) != None):
+                            oprs = name2oprs.get(parts[j])
+                            # print(oprs.symbol)
+                            for k in range(oprs.num_operands):
+                                if st[len(st)-1] != None:
+                                    oprs.next_operator.append(st.pop())
+                                else:
+                                    st.pop()
+                            st.append(oprs)
+                        else:
+                            st.append(None)
+                    # print(parts)
+                    i+=1
+                continue
                 
             i += 1
         gen_operands()
@@ -364,11 +376,9 @@ def read(filename="f.txt"):
         
     except FileNotFoundError:
         print(f"Error: Cannot open file {filename}")
-        return None, None
 
 def main():
-    name2node = read("MAC/f.txt")
-
+    name2node = read("input/f.txt")
     if name2node:
         print(ndata)
         print("\nNodes (Tree format):")

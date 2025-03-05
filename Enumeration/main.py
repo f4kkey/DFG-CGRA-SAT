@@ -3,7 +3,7 @@ from pysat.solvers import Glucose3
 from typing import List, Set, Dict, Tuple
 import readCGRA
 import readDFG
-import time  # Add this import
+import time
 var = 0
 all_clauses = []
 
@@ -255,10 +255,10 @@ def interpret_solution(model: List[int], X: List[List[List[int]]], Y: List[List[
 
 def main():
     # Read CGRA architecture
-    readCGRA.read("Enum/e.txt")
+    readCGRA.read("input/e.txt")
     
     # Read DFG
-    readDFG.read("Enum/f.txt")
+    readDFG.read("input/f.txt")
     
     
     
